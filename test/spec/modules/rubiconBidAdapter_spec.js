@@ -16,7 +16,11 @@ describe('the rubicon adapter', () => {
 
   function createVideoBidderRequest() {
     let bid = bidderRequest.bids[0];
-    bid.mediaType = 'video';
+    bid.mediaTypes = {
+      video: {
+        context: "instream"
+      },
+    };
     bid.params.video = {
       'language': 'en',
       'p_aso.video.ext.skip': true,
@@ -33,13 +37,21 @@ describe('the rubicon adapter', () => {
 
   function createVideoBidderRequestNoVideo() {
     let bid = bidderRequest.bids[0];
-    bid.mediaType = 'video';
+    bid.mediaTypes = {
+      video: {
+        context: "instream"
+      },
+    };
     bid.params.video = '';
   }
 
   function createVideoBidderRequestNoPlayer() {
     let bid = bidderRequest.bids[0];
-    bid.mediaType = 'video';
+    bid.mediaTypes = {
+      video: {
+        context: "instream"
+      },
+    };
     bid.params.video = {
       'language': 'en',
       'p_aso.video.ext.skip': true,

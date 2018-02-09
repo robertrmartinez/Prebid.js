@@ -1,6 +1,7 @@
 import * as utils from 'src/utils';
 import { registerBidder } from 'src/adapters/bidderFactory';
 import { config } from 'src/config';
+import {BANNER, VIDEO} from "src/mediaTypes";
 
 const INTEGRATION = 'pbjs_lite_v$prebid.version$';
 
@@ -73,7 +74,7 @@ utils._each(sizeMap, (item, key) => sizeMap[item] = key);
 export const spec = {
   code: 'rubicon',
   aliases: ['rubiconLite'],
-  supportedMediaTypes: ['banner', 'video'],
+  supportedMediaTypes: [BANNER, VIDEO],
   /**
    * @param {object} bid
    * @return boolean
@@ -93,7 +94,10 @@ export const spec = {
       return false;
     }
 
-    if (bid.mediaType === 'video') {
+    const videoMediaType = utils.deepAccess(bid, `mediaTypes.${VIDEO}`);
+    const context = utils.deepAccess(bid, 'mediaTypes.video.context');
+
+    if (videoMediaType && context === 'instream') {
       if (typeof params.video !== 'object' || !params.video.size_id) {
         return false;
       }
@@ -109,7 +113,10 @@ export const spec = {
     return bidRequests.map(bidRequest => {
       bidRequest.startTime = new Date().getTime();
 
-      if (bidRequest.mediaType === 'video') {
+      const videoMediaType = utils.deepAccess(bidRequest, `mediaTypes.${VIDEO}`);
+      const context = utils.deepAccess(bidRequest, 'mediaTypes.video.context');
+
+      if (videoMediaType && context === 'instream') {
         let params = bidRequest.params;
         let size = parseSizes(bidRequest);
         let page_rf = !params.referrer ? utils.getTopWindowUrl() : params.referrer;
@@ -244,8 +251,11 @@ export const spec = {
       return [];
     }
 
+    const videoMediaType = utils.deepAccess(bidRequest, `mediaTypes.${VIDEO}`);
+    const context = utils.deepAccess(bidRequest, 'mediaTypes.video.context');
+
     // video ads array is wrapped in an object
-    if (typeof bidRequest === 'object' && bidRequest.mediaType === 'video' && typeof ads === 'object') {
+    if (typeof bidRequest === 'object' && videoMediaType && context === 'instream' && typeof ads === 'object') {
       ads = ads[bidRequest.adUnitCode];
     }
 
@@ -272,7 +282,7 @@ export const spec = {
         ttl: 300, // 5 minutes
         netRevenue: config.getConfig('rubicon.netRevenue') || false
       };
-      if (bidRequest.mediaType === 'video') {
+      if (ad.creative_type === VIDEO) {
         bid.width = bidRequest.params.video.playerWidth;
         bid.height = bidRequest.params.video.playerHeight;
         bid.vastUrl = ad.creative_depot_url;
@@ -345,7 +355,9 @@ function _renderCreative(script, impId) {
 
 function parseSizes(bid) {
   let params = bid.params;
-  if (bid.mediaType === 'video') {
+  const videoMediaType = utils.deepAccess(bid, `mediaTypes.${VIDEO}`);
+  const context = utils.deepAccess(bid, 'mediaTypes.video.context');
+  if (videoMediaType && context === 'instream') {
     let size = [];
     if (params.video.playerWidth && params.video.playerHeight) {
       size = [
