@@ -97,8 +97,9 @@ export const spec = {
     const videoMediaType = utils.deepAccess(bid, `mediaTypes.${VIDEO}`);
     const context = utils.deepAccess(bid, 'mediaTypes.video.context');
 
-    if (videoMediaType && context === 'instream') {
-      if (typeof params.video !== 'object' || !params.video.size_id) {
+    if (videoMediaType) {
+      // Support instream only
+      if (context !== 'instream' || typeof params.video !== 'object' || !params.video.size_id) {
         return false;
       }
     }
@@ -114,9 +115,7 @@ export const spec = {
       bidRequest.startTime = new Date().getTime();
 
       const videoMediaType = utils.deepAccess(bidRequest, `mediaTypes.${VIDEO}`);
-      const context = utils.deepAccess(bidRequest, 'mediaTypes.video.context');
-
-      if (videoMediaType && context === 'instream') {
+      if (videoMediaType) {
         let params = bidRequest.params;
         let size = parseSizes(bidRequest);
         let page_rf = !params.referrer ? utils.getTopWindowUrl() : params.referrer;
@@ -251,11 +250,9 @@ export const spec = {
       return [];
     }
 
-    const videoMediaType = utils.deepAccess(bidRequest, `mediaTypes.${VIDEO}`);
-    const context = utils.deepAccess(bidRequest, 'mediaTypes.video.context');
-
     // video ads array is wrapped in an object
-    if (typeof bidRequest === 'object' && videoMediaType && context === 'instream' && typeof ads === 'object') {
+    const videoMediaType = utils.deepAccess(bidRequest, `mediaTypes.${VIDEO}`);
+    if (typeof bidRequest === 'object' && videoMediaType && typeof ads === 'object') {
       ads = ads[bidRequest.adUnitCode];
     }
 
@@ -356,8 +353,7 @@ function _renderCreative(script, impId) {
 function parseSizes(bid) {
   let params = bid.params;
   const videoMediaType = utils.deepAccess(bid, `mediaTypes.${VIDEO}`);
-  const context = utils.deepAccess(bid, 'mediaTypes.video.context');
-  if (videoMediaType && context === 'instream') {
+  if (videoMediaType) {
     let size = [];
     if (params.video.playerWidth && params.video.playerHeight) {
       size = [

@@ -64,6 +64,27 @@ describe('the rubicon adapter', () => {
     };
   }
 
+  function createVideoBidderRequestOutstream() {
+    let bid = bidderRequest.bids[0];
+    bid.mediaTypes = {
+      video: {
+        context: "outstream"
+      },
+    };
+    bid.params.video = {
+      'language': 'en',
+      'p_aso.video.ext.skip': true,
+      'p_aso.video.ext.skipdelay': 15,
+      'playerHeight': 320,
+      'playerWidth': 640,
+      'size_id': 201,
+      'aeParams': {
+        'p_aso.video.ext.skip': '1',
+        'p_aso.video.ext.skipdelay': '15'
+      }
+    };
+  }
+
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
 
@@ -520,6 +541,19 @@ describe('the rubicon adapter', () => {
 
         it('should not validate bid request when no video object is passed in', () => {
           createVideoBidderRequestNoVideo();
+          sandbox.stub(Date, 'now', () =>
+            bidderRequest.auctionStart + 100
+          );
+
+          var floorBidderRequest = clone(bidderRequest);
+
+          let result = spec.isBidRequestValid(floorBidderRequest.bids[0]);
+
+          expect(result).to.equal(false);
+        });
+
+        it('should not validate bid request when video is outstream', () => {
+          createVideoBidderRequestOutstream();
           sandbox.stub(Date, 'now', () =>
             bidderRequest.auctionStart + 100
           );
