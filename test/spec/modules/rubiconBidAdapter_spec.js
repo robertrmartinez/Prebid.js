@@ -1,10 +1,10 @@
-import { expect } from 'chai';
+import {expect} from 'chai';
 import adapterManager from 'src/adaptermanager';
-import { spec, masSizeOrdering, resetUserSync } from 'modules/rubiconBidAdapter';
-import { parse as parseQuery } from 'querystring';
-import { newBidder } from 'src/adapters/bidderFactory';
-import { userSync } from 'src/userSync';
-import { config } from 'src/config';
+import {spec, masSizeOrdering, resetUserSync} from 'modules/rubiconBidAdapter';
+import {parse as parseQuery} from 'querystring';
+import {newBidder} from 'src/adapters/bidderFactory';
+import {userSync} from 'src/userSync';
+import {config} from 'src/config';
 
 var CONSTANTS = require('src/constants.json');
 
@@ -16,7 +16,11 @@ describe('the rubicon adapter', () => {
 
   function createVideoBidderRequest() {
     let bid = bidderRequest.bids[0];
-    bid.mediaType = 'video';
+    bid.mediaTypes = {
+      video: {
+        context: "instream"
+      },
+    };
     bid.params.video = {
       'language': 'en',
       'p_aso.video.ext.skip': true,
@@ -33,17 +37,46 @@ describe('the rubicon adapter', () => {
 
   function createVideoBidderRequestNoVideo() {
     let bid = bidderRequest.bids[0];
-    bid.mediaType = 'video';
+    bid.mediaTypes = {
+      video: {
+        context: "instream"
+      },
+    };
     bid.params.video = '';
   }
 
   function createVideoBidderRequestNoPlayer() {
     let bid = bidderRequest.bids[0];
-    bid.mediaType = 'video';
+    bid.mediaTypes = {
+      video: {
+        context: "instream"
+      },
+    };
     bid.params.video = {
       'language': 'en',
       'p_aso.video.ext.skip': true,
       'p_aso.video.ext.skipdelay': 15,
+      'size_id': 201,
+      'aeParams': {
+        'p_aso.video.ext.skip': '1',
+        'p_aso.video.ext.skipdelay': '15'
+      }
+    };
+  }
+
+  function createVideoBidderRequesOutstream() {
+    let bid = bidderRequest.bids[0];
+    bid.mediaTypes = {
+      video: {
+        context: "outstream"
+      },
+    };
+    bid.params.video = {
+      'language': 'en',
+      'p_aso.video.ext.skip': true,
+      'p_aso.video.ext.skipdelay': 15,
+      'playerHeight': 320,
+      'playerWidth': 640,
       'size_id': 201,
       'aeParams': {
         'p_aso.video.ext.skip': '1',
@@ -208,7 +241,8 @@ describe('the rubicon adapter', () => {
 
         it('should send digitrust params', () => {
           window.DigiTrust = {
-            getUser: function() {}
+            getUser: function () {
+            }
           };
           sandbox.stub(window.DigiTrust, 'getUser', () =>
             ({
@@ -253,7 +287,8 @@ describe('the rubicon adapter', () => {
 
         it('should not send digitrust params due to optout', () => {
           window.DigiTrust = {
-            getUser: function() {}
+            getUser: function () {
+            }
           };
           sandbox.stub(window.DigiTrust, 'getUser', () =>
             ({
@@ -281,7 +316,8 @@ describe('the rubicon adapter', () => {
 
         it('should not send digitrust params due to failure', () => {
           window.DigiTrust = {
-            getUser: function() {}
+            getUser: function () {
+            }
           };
           sandbox.stub(window.DigiTrust, 'getUser', () =>
             ({
@@ -526,6 +562,18 @@ describe('the rubicon adapter', () => {
           expect(result).to.equal(false);
         });
 
+        it('should not validate bid request when video is outstream', () => {
+          createVideoBidderRequesOutstream();
+          sandbox.stub(Date, 'now', () =>
+            bidderRequest.auctionStart + 100
+          );
+
+          var floorBidderRequest = clone(bidderRequest);
+
+          let result = spec.isBidRequestValid(floorBidderRequest.bids[0]);
+
+          expect(result).to.equal(false);
+        });
         it('should get size from bid.sizes too', () => {
           createVideoBidderRequestNoPlayer();
           sandbox.stub(Date, 'now', () =>
@@ -603,7 +651,7 @@ describe('the rubicon adapter', () => {
             ]
           };
 
-          let bids = spec.interpretResponse({ body: response }, {
+          let bids = spec.interpretResponse({body: response}, {
             bidRequest: bidderRequest.bids[0]
           });
 
@@ -655,7 +703,7 @@ describe('the rubicon adapter', () => {
             }]
           };
 
-          let bids = spec.interpretResponse({ body: response }, {
+          let bids = spec.interpretResponse({body: response}, {
             bidRequest: bidderRequest.bids[0]
           });
 
@@ -678,7 +726,7 @@ describe('the rubicon adapter', () => {
             'ads': []
           };
 
-          let bids = spec.interpretResponse({ body: response }, {
+          let bids = spec.interpretResponse({body: response}, {
             bidRequest: bidderRequest.bids[0]
           });
 
@@ -702,7 +750,7 @@ describe('the rubicon adapter', () => {
             }]
           };
 
-          let bids = spec.interpretResponse({ body: response }, {
+          let bids = spec.interpretResponse({body: response}, {
             bidRequest: bidderRequest.bids[0]
           });
 
@@ -712,7 +760,7 @@ describe('the rubicon adapter', () => {
         it('should handle an error because of malformed json response', () => {
           let response = '{test{';
 
-          let bids = spec.interpretResponse({ body: response }, {
+          let bids = spec.interpretResponse({body: response}, {
             bidRequest: bidderRequest.bids[0]
           });
 
@@ -753,7 +801,7 @@ describe('the rubicon adapter', () => {
             'account_id': 7780
           };
 
-          let bids = spec.interpretResponse({ body: response }, {
+          let bids = spec.interpretResponse({body: response}, {
             bidRequest: bidderRequest.bids[0]
           });
 
