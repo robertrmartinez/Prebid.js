@@ -94,6 +94,10 @@ export const spec = {
       return false;
     }
 
+    if (bid.mediaType === 'video') {
+      return false;
+    }
+
     const videoMediaType = utils.deepAccess(bid, `mediaTypes.${VIDEO}`);
     const context = utils.deepAccess(bid, 'mediaTypes.video.context');
 
