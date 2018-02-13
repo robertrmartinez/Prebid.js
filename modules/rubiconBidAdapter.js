@@ -97,14 +97,11 @@ export const spec = {
       return false;
     }
 
-    if (bid.mediaType === 'video') {
-      return false;
-    }
     const videoMediaType = utils.deepAccess(bid, `mediaTypes.${VIDEO}`);
     const context = utils.deepAccess(bid, 'mediaTypes.video.context');
 
-    if (videoMediaType) {
-      if (context !== 'instream' || typeof params.video !== 'object' || !params.video.size_id) {
+    if (bid.mediaType === 'video' || videoMediaType) {
+      if ((videoMediaType && context !== 'instream') || typeof params.video !== 'object' || !params.video.size_id) {
         return false;
       }
     }
@@ -120,7 +117,7 @@ export const spec = {
       bidRequest.startTime = new Date().getTime();
 
       const videoMediaType = utils.deepAccess(bidRequest, `mediaTypes.${VIDEO}`);
-      if (videoMediaType) {
+      if (bidRequest.mediaType === 'video' || videoMediaType) {
         let params = bidRequest.params;
         let size = parseSizes(bidRequest);
 
@@ -255,7 +252,7 @@ export const spec = {
 
     // video ads array is wrapped in an object
     const videoMediaType = utils.deepAccess(bidRequest, `mediaTypes.${VIDEO}`);
-    if (typeof bidRequest === 'object' && videoMediaType && typeof ads === 'object') {
+    if (typeof bidRequest === 'object' && (bidRequest.mediaType === 'video' || videoMediaType) && typeof ads === 'object') {
       ads = ads[bidRequest.adUnitCode];
     }
 
@@ -356,7 +353,7 @@ function _renderCreative(script, impId) {
 function parseSizes(bid) {
   let params = bid.params;
   const videoMediaType = utils.deepAccess(bid, `mediaTypes.${VIDEO}`);
-  if (videoMediaType) {
+  if (bid.mediaType === 'video' || videoMediaType) {
     let size = [];
     if (params.video.playerWidth && params.video.playerHeight) {
       size = [
